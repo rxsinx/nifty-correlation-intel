@@ -45,7 +45,7 @@ class DataCache:
 
         prices = {}
         # Base
-        prices[self.base] = self.kite.fetch_historical(self.base, start, end)["close"]
+        #prices[self.base] = self.kite.fetch_historical(self.base, start, end)["close"]
         # Set timezone naive for consistency
         prices[self.base].index = prices[self.base].index.tz_localize(None)
 
@@ -66,12 +66,14 @@ class DataCache:
         log_returns = np.log(df_prices / df_prices.shift(1))
 
         # Compute ATR (simple 20‑bar range) for base
-        base_ohlc = self.kite.fetch_historical(self.base, start, end, interval="day")
+        base_ohlc = self.kite.fetch_historical(self.base, start, end)
         base_ohlc.index = base_ohlc.index.tz_localize(None)
-        base_ohlc["tr"] = np.maximum(
-            base_ohlc["high"] - base_ohlc["low"],
-            np.abs(base_ohlc["high"] - base_ohlc["close"].shift(1)),
-            np.abs(base_ohlc["low"] - base_ohlc["close"].shift(1))
+        prices[self.base] = base_ohlc["close"]
+        
+        hl  = base_ohlc["high"] - base_ohlc["low"]
+        hc  = np.abs(base_ohlc["high"] - base_ohlc["close"].shift(1))
+        lc  = np.abs(base_ohlc["low"]  - base_ohlc["close"].shift(1))
+        base_ohlc["tr"] = np.maximum(hl, np.maximum(hc, lc))
         )
         atr_base = base_ohlc["tr"].rolling(20).mean().reindex(all_dates)
         atr_base.ffill(inplace=True)
