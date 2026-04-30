@@ -164,7 +164,13 @@ with st.sidebar:
     st.markdown("- 🎯 Action List")
     st.markdown("- ⚙️ Settings")
     st.divider()
-    st.caption(f"Logged in user: {st.session_state.get('kite').kite.user_id if st.session_state.kite else 'N/A'}")
+    user_display = "N/A"
+    if st.session_state.kite:
+        try:
+            user_display = st.session_state.kite.kite.user_id
+        except Exception:
+            user_display = "N/A (token expired)"
+    st.caption(f"Logged in user: {user_display}")
     st.caption("NiftyCorrIntel v1.0 — Built with ❤️ using Streamlit")
 
 # ────────────────────────────────────────────────────────────
