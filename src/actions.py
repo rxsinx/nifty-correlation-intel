@@ -1,3 +1,5 @@
+import pandas as pd
+
 def rank_actions(metrics_dict, pairs_data, base_symbol, min_r2, min_stab, pairs_z_threshold):
     """Return a list of dicts with action candidates ranked by quality."""
     actions = []
