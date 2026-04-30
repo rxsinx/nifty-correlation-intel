@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import statsmodels.api as sm
 from statsmodels.tsa.stattools import coint
 from statsmodels.api import OLS
 
