@@ -1,0 +1,62 @@
+# ─── Python ─────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+*.egg
+
+# ─── Virtual Environments ───────────────────────────────────────
+venv/
+env/
+.venv/
+ENV/
+
+# ─── Environment & Secrets (CRITICAL) ───────────────────────────
+.env
+.env.*
+*.env
+secret*.json
+*.cred
+kite_access_token.txt
+kite_session.json
+
+# ─── Streamlit ──────────────────────────────────────────────────
+.streamlit/secrets.toml
+
+# ─── Data & Cache ───────────────────────────────────────────────
+data/
+cache/
+*.pkl
+*.h5
+*.parquet
+*.csv          # Optional: keep if you want sample data; otherwise ignore generated CSVs
+# ⚠️ If you commit a small reference dataset, add it explicitly (e.g., !data/ref.csv)
+
+# ─── Notebooks & Exploratory ────────────────────────────────────
+.ipynb_checkpoints/
+*.ipynb
+
+# ─── IDE / System ───────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ─── Docker / Deployment ────────────────────────────────────────
+docker-compose.override.yml
+.Dockerfile.context/
+
+# ─── Logs ───────────────────────────────────────────────────────
+*.log
+logs/
+
+# ─── Miscellaneous ──────────────────────────────────────────────
+.coverage
+.pytest_cache/
+.mypy_cache/
