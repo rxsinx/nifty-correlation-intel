@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 
 def compute_regime(avg_abs_corr, dispersion, active_count):
     if active_count < 3:
