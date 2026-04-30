@@ -12,7 +12,8 @@ def beta(log_ret_base, log_ret_sym, window):
 
 def stability(corr_series, hist_window):
     std_corr = corr_series.rolling(hist_window).std()
-    return (1 - 2 * std_corr).clip(0, 1) * 100  # 0-100
+    # 0 std = perfectly stable (100), 0.5+ = unstable (0)
+    return (1 - std_corr.clip(0, 0.5) / 0.5) * 100
 
 def spread_z(base_price, sym_price, window):
     ratio = base_price / sym_price
