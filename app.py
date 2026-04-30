@@ -167,9 +167,12 @@ with st.sidebar:
     user_display = "N/A"
     if st.session_state.kite:
         try:
-            user_display = st.session_state.kite.kite.user_id
+            user_display = st.session_state.kite.kite.profile()["user_id"]
         except Exception:
             user_display = "N/A (token expired)"
+        # kite_client.py — cache at init
+        self._user_id = self.kite.profile()["user_id"]
+    
     st.caption(f"Logged in user: {user_display}")
     st.caption("NiftyCorrIntel v1.0 — Built with ❤️ using Streamlit")
 
