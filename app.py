@@ -124,8 +124,9 @@ with col1:
         st.session_state.data_cache.invalidate()
         st.rerun()
 with col2:
-    st.metric("Last Update", st.session_state.data_cache.last_refresh.strftime("%H:%M:%S") if hasattr(st.session_state.data_cache, 'last_refresh') else "Never")
-
+    last_refresh = getattr(st.session_state.data_cache, 'last_refresh', None)
+    refresh_str = last_refresh.strftime("%H:%M:%S") if last_refresh else "Never"
+    st.metric("Last Update", refresh_str)
 st.markdown("---")
 
 # Show key summary tiles (only if data is available)
