@@ -152,7 +152,8 @@ except Exception as e:
 # Additional sidebar info (Streamlit auto‑generates navigation
 # for pages in the 'pages/' folder)
 # ────────────────────────────────────────────────────────────
-st.header("🧭 Navigation")
+with st.sidebar:
+    st.header("🧭 Navigation")
     st.markdown("Use the **pages** listed above to explore:")
     st.markdown("- 📊 Dashboard")
     st.markdown("- 🔢 Correlation Matrix")
