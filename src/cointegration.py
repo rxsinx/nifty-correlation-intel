@@ -2,12 +2,13 @@ import numpy as np
 import pandas as pd
 import statsmodels.api as sm
 from statsmodels.tsa.stattools import coint
-from statsmodels.api import OLS
 
-def pair_coint_metrics(price_a, price_b, window):
+
+def pair_coint_metrics(price_a: pd.Series, price_b: pd.Series, window: int):
     """Return (is_cointegrated, half_life, latest_correlation) for a pair."""
     log_a = np.log(price_a.dropna())
     log_b = np.log(price_b.dropna())
+
     # Align lengths
     min_len = min(len(log_a), len(log_b))
     log_a = log_a.iloc[-min_len:]
@@ -16,43 +17,45 @@ def pair_coint_metrics(price_a, price_b, window):
     if len(log_a) < window:
         return False, None, np.nan
 
-    # Cointegration test (p-value < 0.05)
+    # ── Cointegration test (Engle-Granger, p < 0.05) ─────────────────────────
     try:
         _, pvalue, _ = coint(log_a.iloc[-window:], log_b.iloc[-window:])
-        is_coint = pvalue < 0.05
-    except:
+        is_coint = bool(pvalue < 0.05)
+    except Exception:
         is_coint = False
 
-    # Half-life via residual AR(1)
-    # 1) OLS: log_a = alpha + beta * log_b  on the window
-    X = log_b.iloc[-window:].values.reshape(-1, 1)
-    y = log_a.iloc[-window:].values
+    # ── OLS regression with constant: log_a = alpha + beta * log_b ───────────
+    # (Bug fix: previous code used OLS(y, X) with no constant → biased beta,
+    #  and then read res.params[0] for BOTH alpha and beta → alpha == beta.)
+    X_raw = log_b.iloc[-window:].values
+    y     = log_a.iloc[-window:].values
     try:
-        model = OLS(y, X)
-        res = model.fit()
-        beta = res.params[0]
-        alpha = res.params[0] if len(res.params) > 1 else 0  # simplified
-        spread = log_a.iloc[-window:] - beta * log_b.iloc[-window:]
-    except:
+        X       = sm.add_constant(X_raw)        # shape (window, 2): [1, log_b]
+        res     = sm.OLS(y, X).fit()
+        alpha, beta_coef = float(res.params[0]), float(res.params[1])
+        spread  = log_a.iloc[-window:] - beta_coef * log_b.iloc[-window:] - alpha
+    except Exception:
+        # Fallback: simple difference spread (no regression)
         spread = log_a.iloc[-window:] - log_b.iloc[-window:]
 
-    # 2) AR(1) on spread differences
-    spread_lag = spread.shift(1).dropna()
+    # ── AR(1) on spread → half-life ───────────────────────────────────────────
+    spread_lag  = spread.shift(1).dropna()
     spread_diff = spread.diff().dropna()
-    aligned = pd.concat([spread_lag, spread_diff], axis=1).dropna()
-    if len(aligned) < 5:
-        return is_coint, None, np.nan
+    aligned     = pd.concat([spread_lag, spread_diff], axis=1).dropna()
 
-    X_ar = aligned.iloc[:, 0].values.reshape(-1, 1)
-    y_ar = aligned.iloc[:, 1].values
-    try:
-        model_ar = OLS(y_ar, X_ar)
-        res_ar = model_ar.fit()
-        phi = res_ar.params[0]
-        half_life = -np.log(2) / np.log(1 + phi) if (1 + phi) > 0 else None
-    except:
-        half_life = None
+    half_life = None
+    if len(aligned) >= 5:
+        X_ar = sm.add_constant(aligned.iloc[:, 0].values)
+        y_ar = aligned.iloc[:, 1].values
+        try:
+            res_ar = sm.OLS(y_ar, X_ar).fit()
+            # params[0] = intercept, params[1] = AR(1) coefficient (phi)
+            phi = float(res_ar.params[1])
+            if (1 + phi) > 0:
+                half_life = float(-np.log(2) / np.log(1 + phi))
+        except Exception:
+            pass
 
-    # Latest correlation
-    corr = log_a.iloc[-window:].corr(log_b.iloc[-window:])
+    # ── Latest rolling correlation ────────────────────────────────────────────
+    corr = float(log_a.iloc[-window:].corr(log_b.iloc[-window:]))
     return is_coint, half_life, corr
